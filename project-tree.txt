@@ -1,0 +1,215 @@
+.
+├── 100_PERCENT_COMPLETE.md
+├── COMMANDS.md
+├── COMPLETE_SETUP_GUIDE.md
+├── components.json
+├── CONTRIBUTING.md
+├── docker-compose.yml
+├── Dockerfile
+├── .dockerignore
+├── .env
+├── .env.example
+├── eslint.config.mjs
+├── FILES_CREATED.md
+├── FINAL_SUMMARY.md
+├── GETTING_STARTED.md
+├── .github
+│   └── workflows
+│       └── ci.yml
+├── .gitignore
+├── IMPLEMENTATION_SUMMARY.md
+├── LICENSE
+├── next.config.ts
+├── next-env.d.ts
+├── ONE_COMMAND_SETUP.md
+├── package.json
+├── package-lock.json
+├── postcss.config.mjs
+├── .prettierignore
+├── .prettierrc
+├── prisma
+│   ├── schema.prisma
+│   └── seed.ts
+├── PROJECT_README.md
+├── PROJECT_STATUS.md
+├── PROJECT_SUMMARY.md
+├── project-tree.txt
+├── public
+│   ├── file.svg
+│   ├── globe.svg
+│   ├── next.svg
+│   ├── vercel.svg
+│   └── window.svg
+├── QUICK_START.md
+├── README.md
+├── setup-and-run.bat
+├── setup-and-run.sh
+├── SETUP_GUIDE.md
+├── src
+│   ├── app
+│   │   ├── (admin)
+│   │   │   └── admin
+│   │   │       ├── categories
+│   │   │       │   └── page.tsx
+│   │   │       ├── comments
+│   │   │       │   └── page.tsx
+│   │   │       ├── layout.tsx
+│   │   │       ├── page.tsx
+│   │   │       ├── posts
+│   │   │       │   ├── [id]
+│   │   │       │   │   └── edit
+│   │   │       │   │       └── page.tsx
+│   │   │       │   ├── new
+│   │   │       │   │   └── page.tsx
+│   │   │       │   └── page.tsx
+│   │   │       ├── tags
+│   │   │       │   └── page.tsx
+│   │   │       └── users
+│   │   │           └── page.tsx
+│   │   ├── api
+│   │   │   ├── admin
+│   │   │   │   ├── comments
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── users
+│   │   │   │       ├── [id]
+│   │   │   │       │   └── role
+│   │   │   │       │       └── route.ts
+│   │   │   │       └── route.ts
+│   │   │   ├── auth
+│   │   │   │   └── [...nextauth]
+│   │   │   │       └── route.ts
+│   │   │   ├── categories
+│   │   │   │   ├── [id]
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── route.ts
+│   │   │   ├── comments
+│   │   │   │   └── [id]
+│   │   │   │       ├── like
+│   │   │   │       │   └── route.ts
+│   │   │   │       └── route.ts
+│   │   │   ├── posts
+│   │   │   │   └── [id]
+│   │   │   │       ├── bookmark
+│   │   │   │       │   └── route.ts
+│   │   │   │       ├── comments
+│   │   │   │       │   └── route.ts
+│   │   │   │       └── route.ts
+│   │   │   ├── search
+│   │   │   │   └── route.ts
+│   │   │   ├── tags
+│   │   │   │   ├── [id]
+│   │   │   │   │   └── route.ts
+│   │   │   │   └── route.ts
+│   │   │   └── user
+│   │   │       └── profile
+│   │   │           └── route.ts
+│   │   ├── (auth)
+│   │   │   └── auth
+│   │   │       ├── error
+│   │   │       │   └── page.tsx
+│   │   │       ├── signin
+│   │   │       │   └── page.tsx
+│   │   │       └── verify-request
+│   │   │           └── page.tsx
+│   │   ├── (dashboard)
+│   │   │   ├── dashboard
+│   │   │   │   ├── bookmarks
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── history
+│   │   │   │   │   └── page.tsx
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── settings
+│   │   │   │       └── page.tsx
+│   │   │   └── layout.tsx
+│   │   ├── favicon.ico
+│   │   ├── globals.css
+│   │   ├── layout.tsx
+│   │   ├── page.tsx
+│   │   ├── (public)
+│   │   │   ├── blog
+│   │   │   │   ├── page.tsx
+│   │   │   │   └── [slug]
+│   │   │   │       └── page.tsx
+│   │   │   ├── category
+│   │   │   │   └── [slug]
+│   │   │   │       └── page.tsx
+│   │   │   ├── layout.tsx
+│   │   │   ├── search
+│   │   │   │   └── page.tsx
+│   │   │   └── tag
+│   │   │       └── [slug]
+│   │   │           └── page.tsx
+│   │   ├── robots.ts
+│   │   ├── rss.xml
+│   │   │   └── route.ts
+│   │   └── sitemap.ts
+│   ├── components
+│   │   ├── features
+│   │   │   ├── BookmarkButton.tsx
+│   │   │   ├── comments
+│   │   │   │   ├── CommentForm.tsx
+│   │   │   │   ├── CommentThread.tsx
+│   │   │   │   └── Comment.tsx
+│   │   │   ├── editor
+│   │   │   │   ├── TiptapEditor.tsx
+│   │   │   │   └── Toolbar.tsx
+│   │   │   ├── RelatedPosts.tsx
+│   │   │   ├── search
+│   │   │   │   └── SearchBar.tsx
+│   │   │   └── ShareButtons.tsx
+│   │   ├── layout
+│   │   │   ├── MobileNav.tsx
+│   │   │   ├── ThemeToggle.tsx
+│   │   │   └── UserNav.tsx
+│   │   ├── providers
+│   │   │   ├── session-provider.tsx
+│   │   │   └── theme-provider.tsx
+│   │   └── ui
+│   │       ├── avatar.tsx
+│   │       ├── badge.tsx
+│   │       ├── button.tsx
+│   │       ├── card.tsx
+│   │       ├── dropdown-menu.tsx
+│   │       ├── input.tsx
+│   │       ├── label.tsx
+│   │       ├── select.tsx
+│   │       ├── separator.tsx
+│   │       ├── skeleton.tsx
+│   │       ├── textarea.tsx
+│   │       ├── toaster.tsx
+│   │       └── toast.tsx
+│   ├── config
+│   │   └── site.ts
+│   ├── emails
+│   │   ├── CommentNotificationEmail.tsx
+│   │   ├── MagicLinkEmail.tsx
+│   │   └── WelcomeEmail.tsx
+│   ├── lib
+│   │   ├── actions
+│   │   │   ├── comment.ts
+│   │   │   └── post.ts
+│   │   ├── auth.config.ts
+│   │   ├── auth.ts
+│   │   ├── db.ts
+│   │   ├── hooks
+│   │   │   └── use-toast.ts
+│   │   ├── prisma.ts
+│   │   ├── security.ts
+│   │   ├── utils.ts
+│   │   └── validations
+│   │       ├── auth.ts
+│   │       ├── category.ts
+│   │       ├── comment.ts
+│   │       └── post.ts
+│   ├── middleware.ts
+│   └── types
+│       ├── index.ts
+│       └── next-auth.d.ts
+├── START_HERE.md
+├── START.md
+├── TESTING_GUIDE.md
+├── TODO.md
+├── tsconfig.json
+└── WHAT_TO_DO_NOW.md
+
+73 directories, 140 files
