@@ -61,7 +61,7 @@ export default async function DashboardPage() {
           Welcome back, {user?.name || "User"}!
         </h2>
         <p className="text-muted-foreground">
-          Here's an overview of your activity
+          Here&apos;s an overview of your activity
         </p>
       </div>
 

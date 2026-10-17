@@ -42,7 +42,7 @@ export default function CommentNotificationEmail({
             </Button>
             <Hr style={hr} />
             <Text style={footer}>
-              You're receiving this because you're the author of this post.
+              You&apos;re receiving this because you&apos;re the author of this post.
             </Text>
             <Text style={footer}>
               <Link href={postUrl} style={link}>

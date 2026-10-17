@@ -36,7 +36,7 @@ export default function MagicLinkEmail({ url, host }: MagicLinkEmailProps) {
             <Text style={code}>{url}</Text>
             <Hr style={hr} />
             <Text style={footer}>
-              If you didn't request this email, you can safely ignore it.
+              If you didn&apos;t request this email, you can safely ignore it.
             </Text>
             <Text style={footer}>
               This link was sent from {host}

@@ -26,10 +26,10 @@ export default function WelcomeEmail({ name }: WelcomeEmailProps) {
               Hi {name || "there"},
             </Text>
             <Text style={paragraph}>
-              Thank you for joining our community! We're excited to have you here.
+              Thank you for joining our community! We&apos;re excited to have you here.
             </Text>
             <Text style={paragraph}>
-              Second Brain is your personal knowledge management system. Here's what
+              Second Brain is your personal knowledge management system. Here&apos;s what
               you can do:
             </Text>
             <ul style={list}>
