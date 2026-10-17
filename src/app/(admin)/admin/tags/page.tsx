@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +19,7 @@ interface Tag {
 }
 
 export default function TagsPage() {
+  const { confirm, dialog } = useConfirm();
   const [tags, setTags] = useState<Tag[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -25,10 +27,6 @@ export default function TagsPage() {
     name: "",
     slug: "",
   });
-
-  useEffect(() => {
-    fetchTags();
-  }, []);
 
   const fetchTags = async () => {
     try {
@@ -41,6 +39,10 @@ export default function TagsPage() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchTags();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,7 +76,13 @@ export default function TagsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure? This will remove the tag from all posts.")) return;
+    const confirmed = await confirm({
+      title: "Delete this tag?",
+      description: "It will be removed from every post that uses it.",
+      confirmLabel: "Delete tag",
+      destructive: true,
+    });
+    if (!confirmed) return;
 
     try {
       const response = await fetch(`/api/tags/${id}`, {
@@ -96,6 +104,7 @@ export default function TagsPage() {
 
   return (
     <div className="space-y-6">
+      {dialog}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Tags</h1>

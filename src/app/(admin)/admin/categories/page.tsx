@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +21,7 @@ interface Category {
 }
 
 export default function CategoriesPage() {
+  const { confirm, dialog } = useConfirm();
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -28,10 +30,6 @@ export default function CategoriesPage() {
     slug: "",
     description: "",
   });
-
-  useEffect(() => {
-    fetchCategories();
-  }, []);
 
   const fetchCategories = async () => {
     try {
@@ -44,6 +42,10 @@ export default function CategoriesPage() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,7 +80,13 @@ export default function CategoriesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure? This will remove the category from all posts.")) return;
+    const confirmed = await confirm({
+      title: "Delete this category?",
+      description: "Posts in it will become uncategorised.",
+      confirmLabel: "Delete category",
+      destructive: true,
+    });
+    if (!confirmed) return;
 
     try {
       const response = await fetch(`/api/categories/${id}`, {
@@ -100,6 +108,7 @@ export default function CategoriesPage() {
 
   return (
     <div className="space-y-6">
+      {dialog}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Categories</h1>
