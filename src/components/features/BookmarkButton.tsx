@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "@/lib/hooks/use-toast";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Bookmark } from "lucide-react";
@@ -14,12 +15,6 @@ export function BookmarkButton({ postId }: BookmarkButtonProps) {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    if (session?.user?.id) {
-      checkBookmark();
-    }
-  }, [session, postId]);
-
   const checkBookmark = async () => {
     try {
       const response = await fetch(`/api/posts/${postId}/bookmark`);
@@ -30,9 +25,15 @@ export function BookmarkButton({ postId }: BookmarkButtonProps) {
     }
   };
 
+  useEffect(() => {
+    if (session?.user?.id) {
+      checkBookmark();
+    }
+  }, [session, postId]);
+
   const toggleBookmark = async () => {
     if (!session?.user?.id) {
-      alert("Please sign in to bookmark posts");
+      toast({ title: "Sign in to bookmark posts", description: "Create a free account to save posts for later." });
       return;
     }
 

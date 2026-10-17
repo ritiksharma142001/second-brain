@@ -1,117 +1,84 @@
-import { getServerSession } from "@/lib/auth";
-import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import { Bookmark, Clock } from "lucide-react";
+import { getServerSession } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
-import { Clock, Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { LibraryRow } from "@/components/features/dashboard/LibraryRow";
+import { RemoveBookmarkButton } from "@/components/features/dashboard/LibraryButtons";
+
+export const metadata = { title: "Bookmarks" };
 
 export default async function BookmarksPage() {
   const session = await getServerSession();
+  if (!session?.user?.id) return null;
 
-  if (!session?.user?.id) {
-    return null;
-  }
-
+  // Only published posts: a bookmarked post that was unpublished or deleted would otherwise be a dead link.
   const bookmarks = await prisma.bookmark.findMany({
-    where: { userId: session.user.id },
+    where: { userId: session.user.id, post: { status: "PUBLISHED" } },
     include: {
       post: {
-        include: {
-          author: {
-            select: {
-              id: true,
-              name: true,
-              image: true,
-            },
-          },
-          category: true,
-          _count: {
-            select: {
-              comments: true,
-            },
-          },
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          excerpt: true,
+          coverImage: true,
+          publishedAt: true,
+          readingTime: true,
+          category: { select: { name: true } },
         },
       },
     },
-    orderBy: {
-      createdAt: "desc",
-    },
+    orderBy: { createdAt: "desc" },
+    take: 100,
   });
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold mb-2">Bookmarks</h2>
-        <p className="text-muted-foreground">
-          Posts you've saved for later ({bookmarks.length})
+        <h2 className="text-2xl font-bold">Bookmarks</h2>
+        <p className="mt-1 text-muted-foreground">
+          Posts you&apos;ve saved for later{bookmarks.length > 0 && ` · ${bookmarks.length}`}
         </p>
       </div>
 
       {bookmarks.length === 0 ? (
-        <div className="text-center py-12 border rounded-lg">
-          <p className="text-lg text-muted-foreground">
-            No bookmarks yet. Start saving posts you want to read later!
-          </p>
+        <div className="window">
+          <div className="window-bar">
+            <span className="dot" /><span className="dot" /><span className="dot" />
+            <span className="ml-2">bookmarks.md</span>
+          </div>
+          <div className="flex flex-col items-center gap-4 px-6 py-14 text-center">
+            <Bookmark className="h-10 w-10 text-highlight" />
+            <div>
+              <p className="text-lg font-bold">Nothing saved yet</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Tap Bookmark on any post to keep it here for later.
+              </p>
+            </div>
+            <Button asChild>
+              <Link href="/blog">Browse posts</Link>
+            </Button>
+          </div>
         </div>
       ) : (
-        <div className="space-y-6">
-          {bookmarks.map((bookmark) => (
-            <div
-              key={bookmark.id}
-              className="flex gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-            >
-              {bookmark.post.coverImage && (
-                <Link
-                  href={`/blog/${bookmark.post.slug}`}
-                  className="shrink-0"
-                >
-                  <div className="w-32 h-24 rounded-lg overflow-hidden">
-                    <img
-                      src={bookmark.post.coverImage}
-                      alt={bookmark.post.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                </Link>
-              )}
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-4 mb-2">
-                  <Link
-                    href={`/blog/${bookmark.post.slug}`}
-                    className="group"
-                  >
-                    <h3 className="font-bold text-lg group-hover:text-primary transition-colors">
-                      {bookmark.post.title}
-                    </h3>
-                  </Link>
-                </div>
-
-                {bookmark.post.excerpt && (
-                  <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
-                    {bookmark.post.excerpt}
-                  </p>
-                )}
-
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  {bookmark.post.category && (
-                    <Badge variant="outline" className="text-xs">
-                      {bookmark.post.category.name}
-                    </Badge>
-                  )}
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
-                    {bookmark.post.publishedAt &&
-                      formatDate(bookmark.post.publishedAt)}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {bookmark.post.readingTime} min
-                  </div>
-                </div>
-              </div>
-            </div>
+        <div className="space-y-4">
+          {bookmarks.map(({ id, createdAt, post }) => (
+            <LibraryRow
+              key={id}
+              post={post}
+              action={<RemoveBookmarkButton postId={post.id} />}
+              meta={
+                <>
+                  <span>saved {formatDate(createdAt)}</span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-3.5 w-3.5" />
+                    {post.readingTime} min read
+                  </span>
+                </>
+              }
+            />
           ))}
         </div>
       )}
