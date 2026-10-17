@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -25,12 +26,9 @@ interface Comment {
 }
 
 export default function CommentsPage() {
+  const { confirm, dialog } = useConfirm();
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    fetchComments();
-  }, []);
 
   const fetchComments = async () => {
     try {
@@ -44,8 +42,18 @@ export default function CommentsPage() {
     }
   };
 
+  useEffect(() => {
+    fetchComments();
+  }, []);
+
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this comment?")) return;
+    const confirmed = await confirm({
+      title: "Delete this comment?",
+      description: "This can't be undone. Replies under it are removed too.",
+      confirmLabel: "Delete comment",
+      destructive: true,
+    });
+    if (!confirmed) return;
 
     try {
       const response = await fetch(`/api/comments/${id}`, {
@@ -72,6 +80,7 @@ export default function CommentsPage() {
 
   return (
     <div className="space-y-6">
+      {dialog}
       <div>
         <h1 className="text-3xl font-bold">Comments</h1>
         <p className="text-muted-foreground">

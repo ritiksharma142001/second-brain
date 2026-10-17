@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, Settings, LogOut, LayoutDashboard } from "lucide-react";
+import { User, Settings, LogOut, LayoutDashboard, PenSquare } from "lucide-react";
 
 interface UserNavProps {
   user: {
@@ -59,6 +59,12 @@ export function UserNav({ user }: UserNavProps) {
           <Link href="/dashboard">
             <LayoutDashboard className="mr-2 h-4 w-4" />
             <span>Dashboard</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/dashboard/posts/new">
+            <PenSquare className="mr-2 h-4 w-4" />
+            <span>Write a post</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>

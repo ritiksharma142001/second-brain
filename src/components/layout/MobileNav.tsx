@@ -31,6 +31,11 @@ export function MobileNav({ user }: MobileNavProps) {
       label: "Dashboard",
       icon: LayoutDashboard,
     });
+    navItems.push({
+      href: "/dashboard/posts/new",
+      label: "Write a post",
+      icon: BookOpen,
+    });
 
     if (user.role === "ADMIN") {
       navItems.push({

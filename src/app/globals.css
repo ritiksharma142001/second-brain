@@ -1,68 +1,388 @@
 @import "tailwindcss";
 
-@theme {
-  --color-background: oklch(100% 0 0);
-  --color-foreground: oklch(9% 0 0);
-  --color-card: oklch(100% 0 0);
-  --color-card-foreground: oklch(9% 0 0);
-  --color-popover: oklch(100% 0 0);
-  --color-popover-foreground: oklch(9% 0 0);
-  --color-primary: oklch(20% 0 0);
-  --color-primary-foreground: oklch(98% 0 0);
-  --color-secondary: oklch(96% 0 0);
-  --color-secondary-foreground: oklch(20% 0 0);
-  --color-muted: oklch(96% 0 0);
-  --color-muted-foreground: oklch(45% 0 0);
-  --color-accent: oklch(65% 0.25 250);
-  --color-accent-foreground: oklch(20% 0 0);
-  --color-destructive: oklch(60% 0.20 25);
-  --color-destructive-foreground: oklch(98% 0 0);
-  --color-border: oklch(90% 0 0);
-  --color-input: oklch(90% 0 0);
-  --color-ring: oklch(9% 0 0);
-  --radius: 0.5rem;
+/* next-themes toggles the `dark` class on <html>; make Tailwind's dark: variant follow it. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Tailwind v4's container is not centred or padded by default. */
+@utility container {
+  margin-inline: auto;
+  padding-inline: 1rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  @theme {
-    --color-background: oklch(9% 0 0);
-    --color-foreground: oklch(98% 0 0);
-    --color-card: oklch(9% 0 0);
-    --color-card-foreground: oklch(98% 0 0);
-    --color-popover: oklch(9% 0 0);
-    --color-popover-foreground: oklch(98% 0 0);
-    --color-primary: oklch(98% 0 0);
-    --color-primary-foreground: oklch(20% 0 0);
-    --color-secondary: oklch(15% 0 0);
-    --color-secondary-foreground: oklch(98% 0 0);
-    --color-muted: oklch(15% 0 0);
-    --color-muted-foreground: oklch(64% 0 0);
-    --color-accent: oklch(65% 0.25 250);
-    --color-accent-foreground: oklch(98% 0 0);
-    --color-destructive: oklch(40% 0.15 25);
-    --color-destructive-foreground: oklch(98% 0 0);
-    --color-border: oklch(15% 0 0);
-    --color-input: oklch(15% 0 0);
-    --color-ring: oklch(83% 0 0);
-  }
+/*
+ * Theme: "modern nostalgia".
+ * Light = warm notebook paper with film grain. Dark = late-night CRT glow.
+ * Everything below is driven by these tokens; change them to re-skin the site.
+ */
+:root {
+  --background: oklch(96.5% 0.02 85);
+  --foreground: oklch(22% 0.03 60);
+  --card: oklch(99% 0.01 90);
+  --card-foreground: oklch(22% 0.03 60);
+  --popover: oklch(99% 0.01 90);
+  --popover-foreground: oklch(22% 0.03 60);
+  --primary: oklch(25% 0.04 50);
+  --primary-foreground: oklch(97% 0.02 85);
+  --secondary: oklch(93% 0.03 85);
+  --secondary-foreground: oklch(25% 0.04 50);
+  --muted: oklch(93% 0.025 85);
+  --muted-foreground: oklch(46% 0.03 60);
+  --accent: oklch(92% 0.05 70);
+  --accent-foreground: oklch(25% 0.04 50);
+  --destructive: oklch(55% 0.2 25);
+  --destructive-foreground: oklch(98% 0 0);
+  --border: oklch(84% 0.03 80);
+  --input: oklch(84% 0.03 80);
+  --ring: oklch(62% 0.17 45);
+  --radius: 0.75rem;
+
+  /* Retro accents */
+  --highlight: oklch(70% 0.17 50);
+  --teal: oklch(60% 0.1 195);
+  --shadow-ink: oklch(25% 0.04 50 / 0.85);
+
+  /* Background layers */
+  --glow-a: oklch(86% 0.12 60 / 0.55);
+  --glow-b: oklch(88% 0.08 195 / 0.45);
+  --grid-line: oklch(60% 0.05 70 / 0.10);
+  --grain-opacity: 0.35;
+  --scanlines: none;
+}
+
+.dark {
+  --background: oklch(17% 0.035 285);
+  --foreground: oklch(94% 0.02 85);
+  --card: oklch(21% 0.04 285);
+  --card-foreground: oklch(94% 0.02 85);
+  --popover: oklch(21% 0.04 285);
+  --popover-foreground: oklch(94% 0.02 85);
+  --primary: oklch(94% 0.03 85);
+  --primary-foreground: oklch(20% 0.04 285);
+  --secondary: oklch(27% 0.04 285);
+  --secondary-foreground: oklch(94% 0.02 85);
+  --muted: oklch(27% 0.04 285);
+  --muted-foreground: oklch(73% 0.03 85);
+  --accent: oklch(30% 0.06 300);
+  --accent-foreground: oklch(94% 0.02 85);
+  --destructive: oklch(60% 0.2 25);
+  --destructive-foreground: oklch(98% 0 0);
+  --border: oklch(34% 0.04 285);
+  --input: oklch(34% 0.04 285);
+  --ring: oklch(76% 0.15 55);
+
+  --highlight: oklch(78% 0.15 55);
+  --teal: oklch(75% 0.11 195);
+  --shadow-ink: oklch(8% 0.03 285 / 0.9);
+
+  --glow-a: oklch(55% 0.2 330 / 0.28);
+  --glow-b: oklch(60% 0.12 200 / 0.2);
+  --grid-line: oklch(80% 0.05 285 / 0.07);
+  --grain-opacity: 0.22;
+  --scanlines: repeating-linear-gradient(0deg, oklch(100% 0 0 / 0.025) 0 1px, transparent 1px 3px);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-highlight: var(--highlight);
+  --color-teal: var(--teal);
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
 }
 
 @layer base {
   * {
-    border-color: theme(colors.border);
+    border-color: var(--border);
   }
   body {
-    background-color: theme(colors.background);
-    color: theme(colors.foreground);
+    background-color: var(--background);
+    color: var(--foreground);
     font-feature-settings: "rlig" 1, "calt" 1;
+    position: relative;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+  ::selection {
+    background: var(--highlight);
+    color: var(--background);
+  }
+
+  /* Nostalgic backdrop, layer 1: soft colour glows + graph-paper grid. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image:
+      radial-gradient(60rem 40rem at 90% -10%, var(--glow-a), transparent 60%),
+      radial-gradient(50rem 35rem at -10% 105%, var(--glow-b), transparent 60%),
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: auto, auto, 32px 32px, 32px 32px;
+  }
+
+  /* Layer 2: film grain (+ CRT scanlines in dark mode). Static, so it costs nothing at runtime. */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    opacity: var(--grain-opacity);
+    background-image:
+      var(--scanlines),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.3 0 0 0 0 0.25 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   }
 }
 
 @layer utilities {
+  /* Small monospace label, e.g. "// capture ideas" */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--highlight);
+  }
+  /* Highlighter-pen underline for a key word in a heading */
+  .marker {
+    background-image: linear-gradient(transparent 62%, color-mix(in oklch, var(--highlight) 45%, transparent) 62% 92%, transparent 92%);
+    padding: 0 0.15em;
+    margin: 0 -0.15em;
+  }
   .text-balance {
     text-wrap: balance;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Retro-modern building blocks                                        */
+/* ------------------------------------------------------------------ */
+
+/* A tiny desktop-window frame: title bar with three dots. */
+.window {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: color-mix(in oklch, var(--card) 92%, transparent);
+  box-shadow: 6px 6px 0 0 var(--shadow-ink);
+  overflow: hidden;
+  backdrop-filter: blur(6px);
+}
+.window-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.8rem;
+  border-bottom: 1.5px solid var(--border);
+  background: color-mix(in oklch, var(--muted) 80%, transparent);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--muted-foreground);
+}
+.window-bar .dot {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 9999px;
+  border: 1.5px solid var(--shadow-ink);
+}
+.window-bar .dot:nth-child(1) { background: oklch(72% 0.17 25); }
+.window-bar .dot:nth-child(2) { background: oklch(84% 0.15 85); }
+.window-bar .dot:nth-child(3) { background: oklch(76% 0.15 150); }
+
+/* Sticker-style tag. In the components layer so Tailwind utilities (e.g. `hidden`) can override it. */
+@layer components {
+  .sticker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.6rem;
+    border: 1.5px solid var(--shadow-ink);
+    border-radius: 9999px;
+    background: var(--card);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    box-shadow: 2px 2px 0 0 var(--shadow-ink);
+  }
+}
+
+/* Generated cover for posts without an image (hue set via --h) */
+.cover-fallback {
+  background:
+    linear-gradient(var(--grid-line) 1px, transparent 1px) 0 0 / 20px 20px,
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) 0 0 / 20px 20px,
+    linear-gradient(135deg, oklch(84% 0.11 var(--h)), oklch(72% 0.14 calc(var(--h) + 55)));
+}
+.dark .cover-fallback {
+  background:
+    linear-gradient(var(--grid-line) 1px, transparent 1px) 0 0 / 20px 20px,
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) 0 0 / 20px 20px,
+    linear-gradient(135deg, oklch(38% 0.12 var(--h)), oklch(27% 0.12 calc(var(--h) + 55)));
+}
+
+/* Motion (all of it is switched off for reduced-motion users below) */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+.rise {
+  animation: rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--d, 0) * 90ms);
+}
+@keyframes pop {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.5) rotate(-12deg); }
+  100% { transform: scale(1); }
+}
+.pop { display: inline-flex; animation: pop 0.38s cubic-bezier(0.3, 1.6, 0.5, 1); }
+@keyframes blink { 50% { opacity: 0; } }
+.caret::after {
+  content: "";
+  display: inline-block;
+  width: 0.55ch;
+  height: 1.1em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: var(--highlight);
+  animation: blink 1.1s steps(1) infinite;
+}
+@keyframes marquee { to { transform: translateX(-50%); } }
+.marquee-track { display: flex; width: max-content; animation: marquee 38s linear infinite; }
+.marquee:hover .marquee-track { animation-play-state: paused; }
+@keyframes bob { 50% { transform: translateY(-6px) rotate(var(--r, 0deg)); } }
+.bob { animation: bob 5s ease-in-out infinite; }
+
+/* Thin progress bar driven by page scroll (progressive enhancement). */
+@keyframes grow { to { transform: scaleX(1); } }
+.read-progress {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 3px;
+  z-index: 60;
+  background: var(--highlight);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  animation: grow linear both;
+  animation-timeline: scroll(root block);
+}
+@supports not (animation-timeline: scroll()) {
+  .read-progress { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rise, .caret::after, .marquee-track, .bob, .read-progress, .pop { animation: none; }
+  .rise { opacity: 1; }
+}
+
+/* ------------------------------------------------------------------ */
+/* Reading experience for published posts (sanitized HTML)             */
+/* ------------------------------------------------------------------ */
+.post-content {
+  font-size: 1.125rem;
+  line-height: 1.8;
+  color: var(--foreground);
+  overflow-wrap: anywhere;
+}
+.post-content > :first-child { margin-top: 0; }
+.post-content p { margin: 1.25em 0; }
+.post-content h1, .post-content h2, .post-content h3, .post-content h4 {
+  line-height: 1.2;
+  margin: 2em 0 0.6em;
+  font-weight: 700;
+}
+.post-content h1 { font-size: 2.1rem; }
+.post-content h2 { font-size: 1.75rem; }
+.post-content h2::before {
+  content: "#";
+  margin-right: 0.45em;
+  font-family: var(--font-mono);
+  color: var(--highlight);
+  font-weight: 400;
+}
+.post-content h3 { font-size: 1.35rem; }
+.post-content h4 { font-size: 1.1rem; }
+.post-content a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--highlight);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+.post-content a:hover { background: color-mix(in oklch, var(--highlight) 30%, transparent); }
+.post-content ul, .post-content ol { margin: 1.25em 0; padding-left: 1.5em; }
+.post-content ul { list-style: disc; }
+.post-content ol { list-style: decimal; }
+.post-content li { margin: 0.4em 0; }
+.post-content li::marker { color: var(--highlight); }
+.post-content ul[data-type="taskList"] { list-style: none; padding-left: 0; }
+.post-content blockquote {
+  margin: 1.75em 0;
+  padding: 1rem 1.25rem 1rem 1.5rem;
+  border: 1.5px solid var(--border);
+  border-left: 5px solid var(--highlight);
+  border-radius: var(--radius);
+  background: color-mix(in oklch, var(--card) 85%, transparent);
+  font-style: italic;
+}
+.post-content blockquote p { margin: 0.4em 0; }
+.post-content code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  padding: 0.15em 0.4em;
+  border-radius: 0.375rem;
+  background: var(--muted);
+  border: 1px solid var(--border);
+}
+.post-content pre {
+  margin: 1.75em 0;
+  padding: 1.1rem 1.25rem;
+  overflow-x: auto;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--muted);
+  box-shadow: 4px 4px 0 0 var(--shadow-ink);
+  font-size: 0.95rem;
+  line-height: 1.65;
+}
+.post-content pre code { padding: 0; border: 0; background: none; font-size: inherit; }
+.post-content img {
+  max-width: 100%;
+  height: auto;
+  margin: 1.75em auto;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+}
+.post-content hr {
+  margin: 2.5em 0;
+  border: 0;
+  border-top: 2px dashed var(--border);
+}
+.post-content table { width: 100%; margin: 1.75em 0; border-collapse: collapse; font-size: 0.95rem; }
+.post-content th, .post-content td { border: 1.5px solid var(--border); padding: 0.55rem 0.8rem; text-align: left; }
+.post-content th { background: var(--muted); font-weight: 700; }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
@@ -75,12 +395,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: theme(colors.muted);
+  background-color: var(--muted);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: theme(colors.muted-foreground / 50%);
+  background-color: color-mix(in oklch, var(--muted-foreground) 50%, transparent);
 }
 
 /* Tiptap Editor Styles */
@@ -90,7 +410,7 @@
 }
 
 .ProseMirror p.is-editor-empty:first-child::before {
-  color: theme(colors.muted-foreground);
+  color: var(--muted-foreground);
   content: attr(data-placeholder);
   float: left;
   height: 0;
@@ -131,14 +451,14 @@
 }
 
 .ProseMirror code {
-  background-color: theme(colors.muted);
+  background-color: var(--muted);
   padding: 0.125rem 0.375rem;
   border-radius: 0.25rem;
   font-size: 0.875rem;
 }
 
 .ProseMirror pre {
-  background-color: theme(colors.muted);
+  background-color: var(--muted);
   padding: 1rem;
   border-radius: 0.5rem;
   margin-top: 1rem;
@@ -147,7 +467,7 @@
 }
 
 .ProseMirror blockquote {
-  border-left: 4px solid theme(colors.primary);
+  border-left: 4px solid var(--primary);
   padding-left: 1rem;
   font-style: italic;
   margin-top: 1rem;
@@ -171,11 +491,11 @@
 
 .ProseMirror th,
 .ProseMirror td {
-  border: 1px solid theme(colors.border);
+  border: 1px solid var(--border);
   padding: 0.5rem 1rem;
 }
 
 .ProseMirror th {
-  background-color: theme(colors.muted);
+  background-color: var(--muted);
   font-weight: 700;
 }

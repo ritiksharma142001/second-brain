@@ -1,112 +1,104 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { MessagesSquare } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { countComments, type CommentData } from "@/lib/comments";
 import { Comment } from "./Comment";
 import { CommentForm } from "./CommentForm";
-import { Skeleton } from "@/components/ui/skeleton";
-
-interface CommentData {
-  id: string;
-  content: string;
-  createdAt: Date;
-  author: {
-    id: string;
-    name: string | null;
-    image: string | null;
-  };
-  _count: {
-    likes: number;
-    replies: number;
-  };
-  replies?: CommentData[];
-}
 
 interface CommentThreadProps {
   postId: string;
+  postAuthorId: string;
   currentUserId?: string;
   isAdmin?: boolean;
 }
 
-export function CommentThread({ postId, currentUserId, isAdmin }: CommentThreadProps) {
+export function CommentThread({ postId, postAuthorId, currentUserId, isAdmin }: CommentThreadProps) {
   const [comments, setComments] = useState<CommentData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    fetchComments();
-  }, [postId]);
-
-  const fetchComments = async () => {
+  const fetchComments = useCallback(async () => {
     try {
       const response = await fetch(`/api/posts/${postId}/comments`);
       if (!response.ok) throw new Error("Failed to fetch comments");
-      const data = await response.json();
-      setComments(data);
-    } catch (err) {
-      setError("Failed to load comments");
+      setComments(await response.json());
+      setError("");
+    } catch {
+      setError("We couldn't load the comments.");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [postId]);
 
-  const handleCommentAdded = () => {
+  useEffect(() => {
     fetchComments();
-  };
+  }, [fetchComments]);
 
-  const handleCommentDeleted = () => {
-    fetchComments();
-  };
-
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <Skeleton className="h-24 w-full" />
-        <Skeleton className="h-24 w-full" />
-        <Skeleton className="h-24 w-full" />
-      </div>
-    );
-  }
+  const total = countComments(comments);
 
   return (
-    <div className="space-y-6">
+    <section aria-labelledby="comments-heading" className="space-y-8">
       <div>
-        <h2 className="text-2xl font-bold mb-4">
-          Comments ({comments.length})
+        <p className="eyebrow mb-2">{"// the discussion"}</p>
+        <h2 id="comments-heading" className="text-2xl font-bold">
+          Comments{!isLoading && !error && <span className="ml-2 font-mono text-lg text-muted-foreground">{total}</span>}
         </h2>
-        
-        {currentUserId && (
-          <CommentForm
-            postId={postId}
-            onCommentAdded={handleCommentAdded}
-          />
-        )}
       </div>
 
-      {error && (
-        <div className="rounded-lg bg-destructive/10 p-4 text-destructive">
-          {error}
+      {currentUserId ? (
+        <CommentForm postId={postId} onCommentAdded={fetchComments} />
+      ) : (
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-card/80 p-4 shadow-[3px_3px_0_0_var(--shadow-ink)]">
+          <p className="text-sm text-muted-foreground">Sign in to join the conversation.</p>
+          <div className="flex gap-2">
+            <Button asChild size="sm" variant="outline">
+              <Link href="/auth/signin">Sign in</Link>
+            </Button>
+            <Button asChild size="sm">
+              <Link href="/auth/signup">Create account</Link>
+            </Button>
+          </div>
         </div>
       )}
 
-      <div className="space-y-6">
-        {comments.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">
-            No comments yet. Be the first to comment!
-          </p>
-        ) : (
-          comments.map((comment) => (
+      {isLoading ? (
+        <div className="space-y-4" aria-busy="true">
+          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-24 w-full" />
+        </div>
+      ) : error ? (
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+          {error}
+          <Button size="sm" variant="outline" onClick={fetchComments}>
+            Try again
+          </Button>
+        </div>
+      ) : comments.length === 0 ? (
+        <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed py-10 text-center">
+          <MessagesSquare className="h-8 w-8 text-highlight" />
+          <p className="font-medium">No comments yet</p>
+          <p className="text-sm text-muted-foreground">Be the first to share what you think.</p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {comments.map((comment) => (
             <Comment
               key={comment.id}
               comment={comment}
               postId={postId}
+              postAuthorId={postAuthorId}
               currentUserId={currentUserId}
               isAdmin={isAdmin}
-              onCommentAdded={handleCommentAdded}
-              onCommentDeleted={handleCommentDeleted}
+              onCommentAdded={fetchComments}
+              onCommentDeleted={fetchComments}
             />
-          ))
-        )}
-      </div>
-    </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }

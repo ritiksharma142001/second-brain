@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { forbidden, jsonError, parseBody, prismaErrorResponse, unauthorized } from "@/lib/api";
+import { tagBodySchema } from "@/lib/validations/taxonomy";
 
 export async function GET() {
   try {
@@ -31,12 +32,12 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession();
-    if (session?.user?.role !== "ADMIN") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    if (!session?.user) return unauthorized();
+    if (session.user.role !== "ADMIN") return forbidden();
 
-    const body = await request.json();
-    const { name, slug } = body;
+    const body = await parseBody(request, tagBodySchema);
+    if ("error" in body) return body.error;
+    const { name, slug } = body.data;
 
     const tag = await prisma.tag.create({
       data: {
@@ -48,6 +49,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(tag, { status: 201 });
   } catch (error) {
     console.error("Error creating tag:", error);
+    const known = prismaErrorResponse(error);
+    if (known) return known;
     return NextResponse.json(
       { error: "Failed to create tag" },
       { status: 500 }

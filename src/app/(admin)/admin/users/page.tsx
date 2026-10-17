@@ -32,10 +32,6 @@ export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
   const fetchUsers = async () => {
     try {
       const response = await fetch("/api/admin/users");
@@ -47,6 +43,10 @@ export default function UsersPage() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     try {

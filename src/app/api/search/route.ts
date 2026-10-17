@@ -1,94 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { jsonError, limitByIp } from "@/lib/api";
+import { parseSearchParams, searchPosts } from "@/lib/search";
 
 export async function GET(request: NextRequest) {
+  const limited = await limitByIp("search", request);
+  if (limited) return limited;
+
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const query = searchParams.get("q");
-    const category = searchParams.get("category");
-    const tag = searchParams.get("tag");
-
-    if (!query && !category && !tag) {
-      return NextResponse.json({ posts: [] });
+    const raw: Record<string, string | string[]> = {};
+    for (const key of new Set(request.nextUrl.searchParams.keys())) {
+      const values = request.nextUrl.searchParams.getAll(key);
+      raw[key] = values.length > 1 ? values : values[0];
     }
 
-    const where: any = {
-      status: "PUBLISHED",
-    };
-
-    if (query) {
-      where.OR = [
-        {
-          title: {
-            contains: query,
-            mode: "insensitive",
-          },
-        },
-        {
-          content: {
-            contains: query,
-            mode: "insensitive",
-          },
-        },
-        {
-          excerpt: {
-            contains: query,
-            mode: "insensitive",
-          },
-        },
-      ];
-    }
-
-    if (category) {
-      where.categories = {
-        some: {
-          category: {
-            slug: category,
-          },
-        },
-      };
-    }
-
-    if (tag) {
-      where.tags = {
-        some: {
-          tag: {
-            slug: tag,
-          },
-        },
-      };
-    }
-
-    const posts = await prisma.post.findMany({
-      where,
-      include: {
-        author: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
-          },
-        },
-        category: true,
-        tags: true,
-        _count: {
-          select: {
-            comments: true,
-          },
-        },
-      },
-      orderBy: {
-        publishedAt: "desc",
-      },
-      take: 50,
-    });
-
-    return NextResponse.json({ posts });
+    const { posts, total, page, totalPages } = await searchPosts(parseSearchParams(raw));
+    return NextResponse.json({ posts, total, page, totalPages });
   } catch (error) {
     console.error("Search error:", error);
-    return NextResponse.json(
-      { error: "Failed to search posts" },
-      { status: 500 }
-    );
+    return jsonError("Failed to search posts", 500);
   }
 }

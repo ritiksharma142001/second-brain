@@ -16,38 +16,109 @@ import {
   Redo,
   Link as LinkIcon,
   Image as ImageIcon,
+  ImagePlus,
+  Loader2,
   Table,
   CheckSquare,
   Code2,
 } from "lucide-react";
+import { useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { usePrompt } from "@/components/ui/prompt-dialog";
+import { ACCEPTED_IMAGE_TYPES } from "@/lib/upload-client";
+import { normalizeLinkUrl } from "@/lib/urls";
 import { Separator } from "@/components/ui/separator";
 
 interface ToolbarProps {
   editor: Editor | null;
+  /** Called with the chosen image files (multiple allowed). */
+  onUploadImages?: (files: File[]) => void;
+  isUploading?: boolean;
 }
 
-export function Toolbar({ editor }: ToolbarProps) {
+export function Toolbar({ editor, onUploadImages, isUploading }: ToolbarProps) {
+  const { prompt, dialog } = usePrompt();
+  const fileInput = useRef<HTMLInputElement>(null);
+
   if (!editor) {
     return null;
   }
 
-  const addImage = () => {
-    const url = window.prompt("Enter image URL:");
-    if (url) {
-      editor.chain().focus().setImage({ src: url }).run();
-    }
+  const addImageFromUrl = async () => {
+    const url = await prompt({
+      title: "Insert an image from the web",
+      description: "To use your own photos, choose Upload photos instead.",
+      label: "Image address",
+      placeholder: "https://example.com/photo.jpg",
+      confirmLabel: "Insert image",
+      validate: (value) =>
+        /^https?:\/\/\S+$/i.test(value)
+          ? null
+          : "Enter a full image address starting with http:// or https://",
+    });
+    if (url) editor.chain().focus().setImage({ src: url }).run();
   };
 
-  const setLink = () => {
-    const url = window.prompt("Enter URL:");
-    if (url) {
-      editor.chain().focus().setLink({ href: url }).run();
+  const setLink = async () => {
+    const previous = editor.getAttributes("link").href as string | undefined;
+    const noSelection = editor.state.selection.empty;
+
+    const input = await prompt({
+      title: previous ? "Edit link" : "Add a link",
+      description: previous
+        ? "Clear the field to remove this link."
+        : noSelection
+          ? "Nothing is selected, so the address itself will be shown as the link text."
+          : undefined,
+      label: "Web address",
+      placeholder: "example.com or https://...",
+      defaultValue: previous ?? "",
+      confirmLabel: "Save link",
+      allowEmpty: !!previous,
+      validate: (value) => {
+        const result = normalizeLinkUrl(value);
+        return "error" in result ? result.error : null;
+      },
+    });
+    if (input === null) return; // cancelled
+
+    const chain = editor.chain().focus().extendMarkRange("link");
+    if (input === "") {
+      chain.unsetLink().run();
+      return;
+    }
+    const result = normalizeLinkUrl(input);
+    if ("error" in result) return;
+
+    if (noSelection && !previous) {
+      chain
+        .insertContent({
+          type: "text",
+          text: result.url,
+          marks: [{ type: "link", attrs: { href: result.url } }],
+        })
+        .run();
+    } else {
+      chain.setLink({ href: result.url }).run();
     }
   };
 
   return (
     <div className="flex flex-wrap items-center gap-1 border-b p-2">
+      {dialog}
+      <input
+        ref={fileInput}
+        type="file"
+        multiple
+        accept={ACCEPTED_IMAGE_TYPES}
+        data-editor-photo-input
+        className="hidden"
+        onChange={(e) => {
+          const files = Array.from(e.target.files ?? []);
+          e.target.value = ""; // allow picking the same file again
+          if (files.length > 0) onUploadImages?.(files);
+        }}
+      />
       {/* Text Formatting */}
       <Button
         type="button"
@@ -173,10 +244,41 @@ export function Toolbar({ editor }: ToolbarProps) {
       <Separator orientation="vertical" className="mx-1 h-6" />
 
       {/* Insert */}
-      <Button type="button" variant="ghost" size="sm" onClick={setLink}>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={setLink}
+        title="Add or edit a link"
+        aria-label="Add or edit a link"
+      >
         <LinkIcon className="h-4 w-4" />
       </Button>
-      <Button type="button" variant="ghost" size="sm" onClick={addImage}>
+      {onUploadImages && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          disabled={isUploading}
+          onClick={() => fileInput.current?.click()}
+          title="Upload photos (you can pick several)"
+          aria-label="Upload photos"
+        >
+          {isUploading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <ImagePlus className="h-4 w-4" />
+          )}
+        </Button>
+      )}
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={addImageFromUrl}
+        title="Insert an image from a web address"
+        aria-label="Insert image from URL"
+      >
         <ImageIcon className="h-4 w-4" />
       </Button>
       <Button

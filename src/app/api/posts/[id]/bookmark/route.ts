@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(
@@ -14,22 +13,23 @@ export async function POST(
     }
 
     const { id } = await params;
-    const bookmark = await prisma.bookmark.create({
-      data: {
-        userId: session.user.id,
-        postId: id,
-      },
+    const post = await prisma.post.findFirst({
+      where: { id, status: "PUBLISHED" },
+      select: { id: true },
+    });
+    if (!post) {
+      return NextResponse.json({ error: "Post not found" }, { status: 404 });
+    }
+
+    // Idempotent: bookmarking twice is not an error.
+    const bookmark = await prisma.bookmark.upsert({
+      where: { userId_postId: { userId: session.user.id, postId: id } },
+      update: {},
+      create: { userId: session.user.id, postId: id },
     });
 
     return NextResponse.json(bookmark, { status: 201 });
-  } catch (error: any) {
-    // Unique constraint violation (already bookmarked)
-    if (error.code === "P2002") {
-      return NextResponse.json(
-        { error: "Already bookmarked" },
-        { status: 400 }
-      );
-    }
+  } catch (error) {
     console.error("Error creating bookmark:", error);
     return NextResponse.json(
       { error: "Failed to create bookmark" },
@@ -49,13 +49,9 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    await prisma.bookmark.delete({
-      where: {
-        userId_postId: {
-          userId: session.user.id,
-          postId: id,
-        },
-      },
+    // deleteMany so removing a bookmark that is already gone is not an error.
+    await prisma.bookmark.deleteMany({
+      where: { userId: session.user.id, postId: id },
     });
 
     return NextResponse.json({ success: true });

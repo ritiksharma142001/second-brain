@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { forbidden, jsonError, parseBody, prismaErrorResponse, unauthorized } from "@/lib/api";
+import { tagBodySchema } from "@/lib/validations/taxonomy";
 
 export async function PATCH(
   request: NextRequest,
@@ -9,12 +10,12 @@ export async function PATCH(
 ) {
   try {
     const session = await getServerSession();
-    if (session?.user?.role !== "ADMIN") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    if (!session?.user) return unauthorized();
+    if (session.user.role !== "ADMIN") return forbidden();
 
-    const body = await request.json();
-    const { name, slug } = body;
+    const body = await parseBody(request, tagBodySchema);
+    if ("error" in body) return body.error;
+    const { name, slug } = body.data;
 
     const { id } = await params;
     const tag = await prisma.tag.update({
@@ -28,6 +29,8 @@ export async function PATCH(
     return NextResponse.json(tag);
   } catch (error) {
     console.error("Error updating tag:", error);
+    const known = prismaErrorResponse(error);
+    if (known) return known;
     return NextResponse.json(
       { error: "Failed to update tag" },
       { status: 500 }
@@ -41,9 +44,8 @@ export async function DELETE(
 ) {
   try {
     const session = await getServerSession();
-    if (session?.user?.role !== "ADMIN") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    if (!session?.user) return unauthorized();
+    if (session.user.role !== "ADMIN") return forbidden();
 
     const { id } = await params;
     await prisma.tag.delete({
@@ -53,6 +55,8 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting tag:", error);
+    const known = prismaErrorResponse(error);
+    if (known) return known;
     return NextResponse.json(
       { error: "Failed to delete tag" },
       { status: 500 }

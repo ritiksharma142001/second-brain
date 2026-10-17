@@ -1,17 +1,22 @@
 import { PrismaClient } from "@prisma/client";
+import { hash } from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log("🌱 Starting database seed...");
 
+  const adminPassword = process.env.ADMIN_PASSWORD || "Admin@12345";
+  const adminHash = await hash(adminPassword, 12);
+
   // Create admin user
   const admin = await prisma.user.upsert({
     where: { email: "admin@example.com" },
-    update: {},
+    update: { password: adminHash },
     create: {
       email: "admin@example.com",
       name: "Admin User",
+      password: adminHash,
       role: "ADMIN",
       emailVerified: new Date(),
     },
@@ -22,10 +27,11 @@ async function main() {
   // Create regular user
   const user = await prisma.user.upsert({
     where: { email: "user@example.com" },
-    update: {},
+    update: { password: adminHash },
     create: {
       email: "user@example.com",
       name: "Regular User",
+      password: adminHash,
       role: "USER",
       emailVerified: new Date(),
     },
@@ -63,6 +69,17 @@ async function main() {
         slug: "ai",
         description: "Artificial Intelligence and Machine Learning",
         color: "#EC4899",
+      },
+    }),
+    prisma.category.upsert({
+      where: { slug: "travel" },
+      update: {},
+      create: {
+        name: "Travel",
+        slug: "travel",
+        description: "Destinations, itineraries and stories from the road",
+        color: "#14B8A6",
+        icon: "Plane",
       },
     }),
   ]);
@@ -151,9 +168,9 @@ async function main() {
 
   console.log("\n🎉 Database seed completed successfully!");
   console.log("\n📝 You can now:");
-  console.log("   - Sign in with: admin@example.com (Admin access)");
-  console.log("   - Sign in with: user@example.com (Regular user)");
-  console.log("\n⚠️  Note: You'll need to request a magic link via the sign-in page");
+  console.log("   - Sign in with: admin@example.com / " + adminPassword + " (Admin access)");
+  console.log("   - Sign in with: user@example.com / " + adminPassword + " (Regular user)");
+  console.log("\n⚠️  Change these passwords before going live (set ADMIN_PASSWORD before seeding)");
 }
 
 main()
