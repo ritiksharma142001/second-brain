@@ -95,7 +95,7 @@ print_success "Prisma Client generated"
 
 # Push database schema
 print_info "Setting up database schema..."
-npx prisma db push --accept-data-loss --skip-generate
+npx prisma migrate deploy
 print_success "Database schema ready"
 
 # Seed database

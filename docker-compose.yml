@@ -1,25 +1,25 @@
-version: '3.8'
-
+# Production-style stack. Required variables come from your shell or a .env file
+# (see .env.example). Nothing secret is hard-coded here.
 services:
-  # PostgreSQL Database
   db:
     image: postgres:16-alpine
     container_name: secondbrain-db
     environment:
-      POSTGRES_USER: secondbrain
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: secondbrain
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: ${POSTGRES_USER:-secondbrain}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-secondbrain}
+    # Not published to the host; only the app can reach it.
+    expose:
+      - "5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U secondbrain"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-secondbrain}"]
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
-  # Next.js Application
   app:
     build:
       context: .
@@ -28,15 +28,35 @@ services:
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: "postgresql://secondbrain:password@db:5432/secondbrain"
-      NEXTAUTH_URL: "http://localhost:3000"
-      NEXTAUTH_SECRET: "your-secret-key-change-in-production"
+      DATABASE_URL: postgresql://${POSTGRES_USER:-secondbrain}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-secondbrain}
+      AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET}
+      NEXTAUTH_SECRET: ${AUTH_SECRET}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:?Set NEXTAUTH_URL}
+      NEXT_PUBLIC_SITE_URL: ${NEXTAUTH_URL}
       AUTH_TRUST_HOST: "true"
-      NODE_ENV: "production"
+      UPLOAD_DIR: /data/uploads
+    volumes:
+      - uploads:/data/uploads
     depends_on:
       db:
         condition: service_healthy
     restart: unless-stopped
 
+  # One-shot job: applies pending migrations, then exits. Run with:
+  #   docker compose run --rm migrate
+  migrate:
+    image: node:22-alpine
+    profiles: ["tools"]
+    working_dir: /app
+    volumes:
+      - ./prisma:/app/prisma:ro
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-secondbrain}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-secondbrain}
+    command: ["npx", "--yes", "prisma@6", "migrate", "deploy"]
+    depends_on:
+      db:
+        condition: service_healthy
+
 volumes:
   postgres_data:
+  uploads:
