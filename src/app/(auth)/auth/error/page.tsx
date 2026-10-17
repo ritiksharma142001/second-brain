@@ -18,7 +18,7 @@ export default function AuthErrorPage() {
         </CardHeader>
         <CardContent className="space-y-4 text-center">
           <p className="text-sm text-muted-foreground">
-            The sign in link may have expired or already been used.
+            Something went wrong while signing in. Please try again.
           </p>
           <Button asChild className="w-full">
             <Link href="/auth/signin">Try Again</Link>

@@ -1,8 +1,6 @@
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
-export const runtime = "nodejs";
-
 export default auth((req) => {
   const { pathname } = req.nextUrl;
   const isLoggedIn = !!req.auth;
@@ -26,7 +24,7 @@ export default auth((req) => {
   }
 
   // Redirect logged-in users away from auth pages
-  if (pathname.startsWith("/auth/signin") && isLoggedIn) {
+  if ((pathname.startsWith("/auth/signin") || pathname.startsWith("/auth/signup")) && isLoggedIn) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
 
@@ -34,5 +32,5 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|public).*)"],
+  matcher: ["/((?!api|uploads|_next/static|_next/image|favicon.ico|public).*)"],
 };
