@@ -1,22 +1,48 @@
+import sanitize from "sanitize-html";
+
 /**
  * Security utilities for sanitization and validation
  */
 
 /**
- * Basic HTML sanitization for blog post content
- * Note: In production, consider using DOMPurify for client-side sanitization
+ * Sanitize user-authored post HTML (stored XSS protection).
+ * Allows the formatting the Tiptap editor produces and strips everything else.
  */
 export function sanitizeHTML(html: string): string {
-  // Allow only safe HTML tags for blog content
-  const allowedTags = [
-    'p', 'br', 'strong', 'em', 'u', 's', 'a', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-    'blockquote', 'code', 'pre', 'ul', 'ol', 'li', 'img', 'table', 'thead', 'tbody',
-    'tr', 'td', 'th', 'div', 'span'
-  ];
-
-  // This is a basic implementation
-  // For production, use DOMPurify or similar library
-  return html;
+  return sanitize(html, {
+    allowedTags: [
+      "p", "br", "hr", "strong", "b", "em", "i", "u", "s", "a", "h1", "h2", "h3", "h4", "h5", "h6",
+      "blockquote", "code", "pre", "ul", "ol", "li", "img", "table", "thead", "tbody", "tr",
+      "td", "th", "div", "span", "label", "input",
+    ],
+    allowedAttributes: {
+      a: ["href", "target", "rel"],
+      img: ["src", "alt", "title", "width", "height"],
+      code: ["class"],
+      pre: ["class"],
+      span: ["class"],
+      td: ["colspan", "rowspan"],
+      th: ["colspan", "rowspan"],
+      ul: ["data-type"],
+      li: ["data-type", "data-checked"],
+      input: ["type", "checked", "disabled"],
+    },
+    allowedSchemes: ["http", "https", "mailto"],
+    // Block "//host/path" URLs: they would load content from another site over the page's own protocol.
+    allowProtocolRelative: false,
+    allowedSchemesByTag: { img: ["http", "https"] },
+    allowedClasses: { code: [/^language-/, /^hljs/], pre: [/^hljs/], span: [/^hljs/] },
+    transformTags: {
+      a: (tagName, attribs) => ({
+        tagName,
+        attribs: { ...attribs, rel: "noopener noreferrer nofollow" },
+      }),
+      input: (tagName, attribs) => ({
+        tagName,
+        attribs: { type: "checkbox", disabled: "disabled", ...(attribs.checked !== undefined ? { checked: "checked" } : {}) },
+      }),
+    },
+  });
 }
 
 /**
