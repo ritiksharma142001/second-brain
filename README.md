@@ -27,11 +27,12 @@ This file is the single source of documentation: what the project is, what chang
 |---|---|
 | Framework | Next.js 16 (App Router, Turbopack), React 19, TypeScript |
 | Styling | Tailwind CSS 4, Radix UI primitives, lucide-react icons |
-| Fonts | Space Grotesk (headings), Inter (body), Space Mono (labels), loaded with `next/font` |
+| Fonts | Space Grotesk (headings), Inter (body), Space Mono (labels), Permanent Marker (hand-written cassette labels), loaded with `next/font` |
 | Database | PostgreSQL with Prisma 6 ORM |
 | Authentication | NextAuth.js v5 (beta): email + password (bcrypt), optional Google sign-in, JWT sessions |
 | Rich-text editor | Tiptap 2 (headings, tables, task lists, code blocks, images, links) |
 | Images | `sharp` (resize, convert to WebP, strip metadata), stored on local disk |
+| Email | Nodemailer over any SMTP service (Resend, Gmail, SendGrid...) for password-reset emails |
 | Validation | Zod |
 | Security | `sanitize-html` for post content, `rate-limiter-flexible` for rate limiting, security headers in `next.config.ts` |
 | Testing | Vitest (unit tests), TypeScript compiler, ESLint |
@@ -48,7 +49,7 @@ Requires **Node.js 20.9 or newer** (developed on Node 22).
 - **Version:** PostgreSQL 14 or newer. Developed against PostgreSQL 18; the Docker Compose file uses PostgreSQL 16.
 - **Privileges:** the database user needs to create tables and indexes in its own database. `CREATEDB` is only needed if you run `prisma migrate dev`.
 - **Connection string:** set `DATABASE_URL` (see [environment variables](#4-environment-variables)).
-- **Tables (15):** `User`, `Account`, `Session`, `VerificationToken`, `Category`, `Tag`, `Post`, `Comment`, `CommentLike`, `Bookmark`, `ViewHistory`, `Media`, `Newsletter`, `Notification`, `Announcement`.
+- **Tables (17):** `User`, `Account`, `Session`, `VerificationToken`, `Category`, `Tag`, `Post`, `Comment`, `CommentLike`, `Bookmark`, `ViewHistory`, `Media`, `Newsletter`, `Notification`, `Announcement`, `Mixtape`, `MixtapeTrack`.
 - **Schema management:** versioned migrations live in `prisma/migrations`. Use `npm run db:migrate` (`prisma migrate deploy`) to apply them. Do **not** use `prisma db push` on a database that holds real data: it can drop data to make the schema match.
 - **Case-insensitive search** uses Postgres `ILIKE` through Prisma (`mode: "insensitive"`); no extensions are required.
 
@@ -98,9 +99,13 @@ Open <http://localhost:3000>.
 
 Set `ADMIN_PASSWORD` before running the seed to choose a different password. You can also just create an account at `/auth/signup`.
 
-**Useful pages:** `/` home, `/blog`, `/search`, `/auth/signin`, `/auth/signup`, `/dashboard` (your area), `/admin` (admins only), `/api/health` (health check).
+**Password reset in development:** until the `EMAIL_*` settings are filled in, no email is sent. The reset link is printed in the terminal running `npm run dev`, and the "Check your email" page says so.
+
+**Useful pages:** `/` home, `/blog`, `/search`, `/mixtapes` (the tape shelf), `/auth/signin`, `/auth/signup`, `/dashboard` (your area), `/admin` (admins only), `/api/health` (health check).
 
 ### Production build (without Docker)
+
+Always run `npm run db:migrate` when deploying a new version: it applies any new database tables (for example the mixtape tables).
 
 ```bash
 npm run build
@@ -148,6 +153,7 @@ Copy `.env.example` to `.env`. The app validates the important ones on startup a
 | `NEXT_PUBLIC_SITE_URL` | yes in production | Used for links, sitemap, RSS and share links |
 | `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `NEXT_PUBLIC_GOOGLE_ENABLED` | optional | Turn on "Continue with Google" (set the last one to `"true"`) |
 | `UPLOAD_DIR` | optional | Folder for uploaded images (default `./uploads`). Use a persistent volume in production |
+| `EMAIL_SERVER_HOST`, `EMAIL_SERVER_PORT`, `EMAIL_SERVER_USER`, `EMAIL_SERVER_PASSWORD`, `EMAIL_FROM` | for password reset in production | SMTP settings used to email reset links (Resend, Gmail, SendGrid...). If empty, development prints the link in the server console instead |
 | `ADMIN_PASSWORD` | optional | Password the seed gives to the demo accounts |
 
 ---
@@ -155,7 +161,7 @@ Copy `.env.example` to `.env`. The app validates the important ones on startup a
 ## 5. Running the tests
 
 ```bash
-npm test               # all unit tests (Vitest), about 35 tests in 7 files
+npm test               # all unit tests (Vitest), about 49 tests in 9 files
 npm run type-check     # TypeScript
 npm run lint           # ESLint (0 errors; a few warnings remain)
 ```
@@ -171,6 +177,8 @@ To run a single file: `npx vitest run src/lib/search.test.ts`. To re-run on ever
 | `lib/rate-limit.test.ts` | Rate limiter blocking, retry time, reset and independent keys |
 | `lib/avatars.test.ts` | Only DiceBear avatar URLs in the expected format are accepted |
 | `lib/search.test.ts` | Search query parsing, URL building, keyword splitting and relevance scoring |
+| `lib/password-reset.test.ts` | Reset tokens: randomness, hash-only storage, link building, validation |
+| `lib/mixtape.test.ts` | Mixtapes: `m:ss` lengths, side capacity (C60/C90), overfilled sides refused, unsafe links refused |
 | `lib/urls.test.ts` | Link normalisation: adds `https://`, refuses `javascript:` and similar |
 | `lib/uploads.test.ts` | Image type detection by bytes (SVG/HTML refused), WebP conversion, GPS/EXIF removal, animated GIFs, path-traversal protection |
 
@@ -182,6 +190,8 @@ To run a single file: `npx vitest run src/lib/search.test.ts`. To re-run on ever
 2. Write a post at `/dashboard/posts/new`: pick the **Travel** category, add tags, upload several photos, publish.
 3. Search for a word from the post at `/search` and use the category and tag filters.
 4. Comment, give kudos (the star), bookmark, and check Dashboard → Bookmarks and History.
+5. Sign out, use **Forgot password?** on the sign-in page, open the link from the server terminal, set a new password and sign in with it.
+6. Open **Mixtapes** in the header, make a tape (try to overfill a side), publish it and play it on the shelf.
 
 ---
 
@@ -196,6 +206,8 @@ To run a single file: `npx vitest run src/lib/search.test.ts`. To re-run on ever
 ### Accounts and profile
 - **Email + password sign-up and sign-in** (passwords hashed with bcrypt), with optional Google sign-in. Replaces the earlier magic-link flow.
 - Brute-force protection on login, rate limit on sign-up.
+- Password fields have a show/hide button with a pixel-art eye (open eye reveals, crossed-out eye hides), on sign-in, sign-up and reset.
+- **Forgot password:** a link on the sign-in page leads to `/auth/forgot-password`. The emailed link opens `/auth/reset-password`, works once, expires after 1 hour, and only the newest link is valid. Tokens are stored hashed, the response never reveals whether an email has an account, and requests are rate-limited per IP and per inbox. In development, with no email settings, the link is printed in the server console.
 - **Profile settings:** edit name and bio, and choose a cartoon avatar (5 styles). The header updates immediately after saving.
 - Roles: anyone signed in can write and publish their own posts, edit or delete only their own; admins can manage everything, plus categories, tags, users and comment moderation.
 
@@ -210,6 +222,13 @@ To run a single file: `npx vitest run src/lib/search.test.ts`. To re-run on ever
 - **Bookmarks and reading history** pages: history is now actually recorded, entries can be removed, history can be cleared, and unpublished posts no longer appear.
 - Deleting anything now shows an in-app confirmation window instead of the browser's "localhost says..." pop-up.
 
+### Mixtapes
+- **Header link "Mixtapes"** opens **the Tape Shelf**, a wall of public cassette mixtapes.
+- **Make a tape the old way** (`/mixtapes/new`): choose a C60 or C90 cassette (30 or 45 minutes a side), a label colour, a title and who it's for. Add old or new songs to Side A or B with their length, a "why this song" note and an optional listen link. A live "tape left" meter refuses songs that don't fit, just like real tape, and songs can be reordered or moved to the other side.
+- **Private by default.** A tape is visible only to its owner (admins can't see private tapes either) until they choose **Publish to the shelf**. It can be made private again at any time.
+- **Player:** reels spin, a tape counter ticks, songs are marked as they "play" in real time, you can flip to Side B, cue any song, and read the liner note written on a paper card. Songs are never hosted: each track links out to wherever it can be heard, which avoids copyright problems.
+- Owners manage their tapes under **Dashboard → My Mixtapes**; admins can remove public tapes for moderation.
+
 ### Search and travel
 - **Search page** with keyword search (every word must match, in titles, text, tags, category and author), category and multi-tag filters, sorting, pagination, highlighted matches, active-filter chips and helpful empty states. Works without JavaScript and results are shareable URLs.
 - **Travel:** a Travel category (listed first) and destinations as tags.
@@ -218,9 +237,10 @@ To run a single file: `npx vitest run src/lib/search.test.ts`. To re-run on ever
 
 ### Security and reliability
 - Real HTML sanitising of post content (previously a no-op), including blocking protocol-relative image URLs.
-- Rate limits on sign-in, sign-up, comments, search, likes and uploads.
+- Rate limits on sign-in, sign-up, password reset (per IP and per inbox), comments, search, likes, uploads and mixtape saves. In local development, where every visitor comes from the same loopback address, the per-IP limit is skipped so one person can't lock everyone out; per-account and per-inbox limits still apply.
 - Input validation on every API that accepts data; permission checks so users can only change their own posts and comments; unpublished drafts are visible only to their author and admins.
 - Security headers, startup checks for required settings, and a `/api/health` endpoint.
+- A session cookie that can no longer be read (for example after the secret changes) is treated as signed out and removed, instead of crashing pages.
 - Fixes along the way: double-counted page views, broken search filters, comments that crashed the page, likes that were forgotten, replies that disappeared, and a Tiptap hydration warning.
 
 ### Code quality and operations
@@ -241,18 +261,18 @@ prisma/
   seed-posts.ts          20 sample posts
 src/
   app/
-    (public)/            home, blog, post pages, search, category and tag pages
-    (auth)/              sign-in and sign-up
-    (dashboard)/         signed-in area: overview, my posts, bookmarks, history, settings
+    (public)/            home, blog, post pages, search, category and tag pages, mixtapes
+    (auth)/              sign-in, sign-up, forgot password, reset password
+    (dashboard)/         signed-in area: overview, my posts, my mixtapes, bookmarks, history, settings
     (admin)/             admin area (admins only)
-    api/                 REST endpoints (posts, comments, search, upload, register, health...)
+    api/                 REST endpoints (posts, comments, search, upload, register, password, mixtapes, health...)
     uploads/[...path]/   serves uploaded images from UPLOAD_DIR
     proxy.ts             route protection (dashboard and admin)
   components/
     ui/                  buttons, cards, dialogs, form controls
     layout/              header, footer, user menu
-    features/            post card, editor, comments, search, dashboard pieces
-  lib/                   auth, database, search, uploads, rate limiting, validation, helpers
+    features/            post card, editor, comments, search, mixtapes (cassette, player, builder), dashboard pieces
+  lib/                   auth, database, search, uploads, mail, password reset, mixtapes, rate limiting, validation
 ```
 
 ---
@@ -261,20 +281,23 @@ src/
 
 - [ ] Change the demo account passwords (or never seed them in production).
 - [ ] Set strong values for `AUTH_SECRET`, `NEXTAUTH_SECRET` and the database password; keep them out of git.
-- [ ] Set `NEXTAUTH_URL` and `NEXT_PUBLIC_SITE_URL` to the real https address.
+- [ ] Set `NEXTAUTH_URL` and `NEXT_PUBLIC_SITE_URL` to the real https address (reset links are built from them).
+- [ ] Configure an email service (the `EMAIL_*` variables); without it, password-reset emails cannot be sent in production.
 - [ ] Mount persistent storage at `UPLOAD_DIR`, and back up both the database and the uploads folder.
 - [ ] Run `npm audit` and update dependencies with known vulnerabilities.
+- [ ] Run `npm run db:migrate` on the production database for every deploy.
 - [ ] Test the Docker setup on the real host.
 - [ ] Add a Content-Security-Policy header (needs a nonce setup, so it was left out).
 - [ ] If you run more than one server instance, move rate limiting to Redis: counters are currently per process.
 
 ## 9. Known limitations
 
-- **No password reset or email verification yet.** A forgotten password cannot be recovered, and sign-up does not confirm the email address. This needs an email service.
+- **No email verification yet.** Sign-up does not confirm the email address. Password reset exists, but it needs an email service in production, and changing a password does not sign out other devices (sessions last up to 30 days).
 - **Uploads live on local disk.** Fine for one server; for several servers or serverless hosting, switch to object storage (the code is isolated in `src/lib/uploads.ts`).
 - **Scheduled posts** have a status but nothing publishes them automatically.
 - **Search** ranks the newest 100 matches by relevance; for a very large blog, switch to Postgres full-text search.
 - Sample post authors, view counts and dates are made up, and avatars come from the DiceBear web service (check each style's licence before launch).
+- **Mixtapes** link out to songs rather than hosting audio (by design, for copyright); "playing" is a real-time simulation. The shelf shows the newest 48 tapes with no paging, tapes don't appear in search or the sitemap, and they have no comments or likes yet.
 - No automated end-to-end tests, and no custom 404 or About page yet.
 
 ---

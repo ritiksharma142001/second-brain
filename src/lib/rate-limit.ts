@@ -20,6 +20,7 @@ export const LIMITS = {
   search: { points: 30, duration: 60 },
   write: { points: 30, duration: 60 },
   upload: { points: 20, duration: 10 * 60 },
+  passwordReset: { points: 5, duration: 60 * 60 },
 } satisfies Record<string, LimitConfig>;
 
 export type LimitName = keyof typeof LIMITS;

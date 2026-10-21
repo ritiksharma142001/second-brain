@@ -1,4 +1,10 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { AlertCircle } from "lucide-react";
@@ -12,9 +18,7 @@ export default function AuthErrorPage() {
             <AlertCircle className="h-8 w-8 text-destructive" />
           </div>
           <CardTitle className="text-2xl">Authentication Error</CardTitle>
-          <CardDescription>
-            There was a problem signing you in.
-          </CardDescription>
+          <CardDescription>There was a problem signing you in.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 text-center">
           <p className="text-sm text-muted-foreground">

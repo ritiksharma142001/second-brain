@@ -5,7 +5,14 @@ import Link from "next/link";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { Button } from "@/components/ui/button";
-import { Home, PenSquare, Bookmark, History, Settings } from "lucide-react";
+import {
+  Home,
+  PenSquare,
+  Bookmark,
+  History,
+  Settings,
+  CassetteTape,
+} from "lucide-react";
 
 export default async function DashboardLayout({
   children,
@@ -21,6 +28,7 @@ export default async function DashboardLayout({
   const navItems = [
     { href: "/dashboard", label: "Overview", icon: Home },
     { href: "/dashboard/posts", label: "My Posts", icon: PenSquare },
+    { href: "/dashboard/mixtapes", label: "My Mixtapes", icon: CassetteTape },
     { href: "/dashboard/bookmarks", label: "Bookmarks", icon: Bookmark },
     { href: "/dashboard/history", label: "History", icon: History },
     { href: "/dashboard/settings", label: "Settings", icon: Settings },

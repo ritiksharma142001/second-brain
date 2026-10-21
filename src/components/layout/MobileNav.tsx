@@ -4,7 +4,15 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Menu, X, BookOpen, LayoutDashboard, LogIn, LogOut } from "lucide-react";
+import {
+  Menu,
+  X,
+  BookOpen,
+  LayoutDashboard,
+  LogIn,
+  LogOut,
+  CassetteTape,
+} from "lucide-react";
 import { signOut } from "next-auth/react";
 
 interface MobileNavProps {
@@ -23,6 +31,7 @@ export function MobileNav({ user }: MobileNavProps) {
   const navItems = [
     { href: "/", label: "Home", icon: BookOpen },
     { href: "/blog", label: "Blog", icon: BookOpen },
+    { href: "/mixtapes", label: "Mixtapes", icon: CassetteTape },
   ];
 
   if (user) {
