@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { CassetteTape, Search } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Brand } from "@/components/layout/Brand";
@@ -23,6 +23,13 @@ export async function SiteHeader() {
         <nav className="hidden items-center gap-6 md:flex">
           <Link href="/blog" className={navLinkClass}>
             Blog
+          </Link>
+          <Link
+            href="/mixtapes"
+            className={`${navLinkClass} flex items-center gap-1.5`}
+          >
+            <CassetteTape className="h-4 w-4" />
+            Mixtapes
           </Link>
           <Link
             href="/search"
