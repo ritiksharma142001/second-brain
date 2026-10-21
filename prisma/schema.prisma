@@ -41,6 +41,7 @@ model User {
   bookmarks     Bookmark[]
   viewHistory   ViewHistory[]
   notifications Notification[]
+  mixtapes      Mixtape[]
 
   @@index([email])
 }
@@ -110,32 +111,32 @@ model Tag {
 }
 
 model Post {
-  id              String     @id @default(cuid())
-  title           String
-  slug            String     @unique
-  excerpt         String?
-  content         String
-  coverImage      String?
-  status          PostStatus @default(DRAFT)
-  featured        Boolean    @default(false)
-  pinned          Boolean    @default(false)
-  views           Int        @default(0)
-  readingTime     Int        @default(0) // in minutes
-  publishedAt     DateTime?
-  scheduledFor    DateTime?
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
+  id           String     @id @default(cuid())
+  title        String
+  slug         String     @unique
+  excerpt      String?
+  content      String
+  coverImage   String?
+  status       PostStatus @default(DRAFT)
+  featured     Boolean    @default(false)
+  pinned       Boolean    @default(false)
+  views        Int        @default(0)
+  readingTime  Int        @default(0) // in minutes
+  publishedAt  DateTime?
+  scheduledFor DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
   authorId   String
-  author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  author     User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
   categoryId String?
   category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
-  tags         Tag[]
-  comments     Comment[]
-  bookmarks    Bookmark[]
-  viewHistory  ViewHistory[]
-  media        Media[]
+  tags        Tag[]
+  comments    Comment[]
+  bookmarks   Bookmark[]
+  viewHistory ViewHistory[]
+  media       Media[]
 
   @@index([slug])
   @@index([authorId])
@@ -145,8 +146,6 @@ model Post {
   @@index([featured])
   @@index([pinned])
 }
-
-
 
 model Comment {
   id        String   @id @default(cuid())
@@ -200,8 +199,8 @@ model Bookmark {
 }
 
 model ViewHistory {
-  id        String   @id @default(cuid())
-  viewedAt  DateTime @default(now())
+  id       String   @id @default(cuid())
+  viewedAt DateTime @default(now())
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -230,10 +229,10 @@ model Media {
 }
 
 model Newsletter {
-  id          String   @id @default(cuid())
-  email       String   @unique
-  subscribed  Boolean  @default(true)
-  createdAt   DateTime @default(now())
+  id             String    @id @default(cuid())
+  email          String    @unique
+  subscribed     Boolean   @default(true)
+  createdAt      DateTime  @default(now())
   unsubscribedAt DateTime?
 
   @@index([email])
@@ -257,14 +256,64 @@ model Notification {
 }
 
 model Announcement {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   title     String
   content   String
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   expiresAt DateTime?
 
   @@index([active])
   @@index([createdAt])
+}
+
+enum TapeSide {
+  A
+  B
+}
+
+/// A cassette mixtape: songs split over two sides with a hard time limit per side.
+model Mixtape {
+  id          String    @id @default(cuid())
+  title       String
+  /// "For: ..." written on the label
+  dedication  String?
+  /// Liner note / letter to the listener
+  note        String?
+  /// Total minutes of tape: 60 (C60) or 90 (C90); each side holds half
+  tapeLength  Int       @default(60)
+  /// Label colour key (see src/lib/mixtape.ts)
+  color       String    @default("sunset")
+  /// Private until the owner publishes it to the shelf
+  isPublic    Boolean   @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  authorId String
+  author   User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  tracks   MixtapeTrack[]
+
+  @@index([authorId])
+  @@index([isPublic, publishedAt])
+}
+
+model MixtapeTrack {
+  id          String   @id @default(cuid())
+  side        TapeSide
+  position    Int
+  title       String
+  artist      String
+  year        Int?
+  durationSec Int
+  /// "Why this song"
+  note        String?
+  /// Where to listen (external link; songs are never hosted here)
+  link        String?
+
+  mixtapeId String
+  mixtape   Mixtape @relation(fields: [mixtapeId], references: [id], onDelete: Cascade)
+
+  @@index([mixtapeId, side, position])
 }
