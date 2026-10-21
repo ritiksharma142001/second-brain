@@ -12,7 +12,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { User, Settings, LogOut, LayoutDashboard, PenSquare } from "lucide-react";
+import {
+  User,
+  Settings,
+  LogOut,
+  LayoutDashboard,
+  PenSquare,
+} from "lucide-react";
 
 interface UserNavProps {
   user: {
