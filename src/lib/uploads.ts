@@ -1,7 +1,15 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { put } from "@vercel/blob";
 import { nanoid } from "nanoid";
 import sharp from "sharp";
+
+/**
+ * Uploads go to Vercel Blob when a Blob store is connected (it sets
+ * BLOB_READ_WRITE_TOKEN), and to UPLOAD_DIR on disk otherwise.
+ */
+export const blobStorageEnabled = () =>
+  Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
 
 /** Where uploaded images live on disk. Mount a persistent volume here in production. */
 export const UPLOAD_DIR = path.resolve(
@@ -75,9 +83,9 @@ export async function processImage(
 }
 
 export interface SavedUpload {
-  /** Path relative to UPLOAD_DIR, e.g. 2026/10/Ab3dE....webp */
+  /** Storage key, e.g. 2026/10/Ab3dE....webp (relative to UPLOAD_DIR on disk) */
   key: string;
-  /** Public URL served by /uploads */
+  /** Public URL: /uploads/... on disk, or the Vercel Blob URL */
   url: string;
 }
 
@@ -85,6 +93,24 @@ export async function saveUpload(data: Buffer): Promise<SavedUpload> {
   const now = new Date();
   const folder = `${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
   const key = `${folder}/${nanoid(16).replace(/[^A-Za-z0-9]/g, "x")}.webp`;
+
+  if (blobStorageEnabled()) {
+    // Names are random and never reused, so the file can be cached for a year.
+    const blob = await put(`uploads/${key}`, data, {
+      access: "public",
+      contentType: "image/webp",
+      addRandomSuffix: false,
+      cacheControlMaxAge: 31536000,
+    });
+    return { key, url: blob.url };
+  }
+
+  // Serverless hosts (e.g. Vercel) have no lasting disk: files written there vanish.
+  if (process.env.VERCEL) {
+    throw new Error(
+      "Image storage isn't configured: connect a Vercel Blob store to this project.",
+    );
+  }
 
   await mkdir(path.join(UPLOAD_DIR, folder), { recursive: true });
   await writeFile(path.join(UPLOAD_DIR, key), data, { flag: "wx" });
