@@ -279,6 +279,8 @@ src/
 
 ## 8. Before going live
 
+> **Deploying to Vercel?** Follow [DEPLOY-VERCEL.md](DEPLOY-VERCEL.md) — database, image storage, settings and every dashboard step.
+
 - [ ] Change the demo account passwords (or never seed them in production).
 - [ ] Set strong values for `AUTH_SECRET`, `NEXTAUTH_SECRET` and the database password; keep them out of git.
 - [ ] Set `NEXTAUTH_URL` and `NEXT_PUBLIC_SITE_URL` to the real https address (reset links are built from them).
